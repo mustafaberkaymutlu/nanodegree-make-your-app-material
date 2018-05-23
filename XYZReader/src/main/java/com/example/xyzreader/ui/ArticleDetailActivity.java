@@ -51,7 +51,7 @@ public class ArticleDetailActivity extends AppCompatActivity
         getSupportLoaderManager().initLoader(0, null, this);
 
         mPagerAdapter = new MyPagerAdapter(getSupportFragmentManager());
-        mPager = (ViewPager) findViewById(R.id.pager);
+        mPager = findViewById(R.id.pager);
         mPager.setAdapter(mPagerAdapter);
         mPager.setPageMargin((int) TypedValue
                 .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()));
@@ -79,23 +79,15 @@ public class ArticleDetailActivity extends AppCompatActivity
         mUpButtonContainer = findViewById(R.id.up_container);
 
         mUpButton = findViewById(R.id.action_up);
-        mUpButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onSupportNavigateUp();
-            }
-        });
+        mUpButton.setOnClickListener(view -> onSupportNavigateUp());
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mUpButtonContainer.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
-                @Override
-                public WindowInsets onApplyWindowInsets(View view, WindowInsets windowInsets) {
-                    view.onApplyWindowInsets(windowInsets);
-                    mTopInset = windowInsets.getSystemWindowInsetTop();
-                    mUpButtonContainer.setTranslationY(mTopInset);
-                    updateUpButtonPosition();
-                    return windowInsets;
-                }
+            mUpButtonContainer.setOnApplyWindowInsetsListener((view, windowInsets) -> {
+                view.onApplyWindowInsets(windowInsets);
+                mTopInset = windowInsets.getSystemWindowInsetTop();
+                mUpButtonContainer.setTranslationY(mTopInset);
+                updateUpButtonPosition();
+                return windowInsets;
             });
         }
 
