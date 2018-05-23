@@ -1,4 +1,4 @@
-package com.example.xyzreader.ui;
+package com.example.xyzreader.ui.list;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -23,6 +23,9 @@ import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
 import com.example.xyzreader.data.ItemsContract;
 import com.example.xyzreader.data.UpdaterService;
+import com.example.xyzreader.util.DynamicHeightNetworkImageView;
+import com.example.xyzreader.util.ImageLoaderHelper;
+import com.example.xyzreader.ui.detail.ArticleDetailActivity;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

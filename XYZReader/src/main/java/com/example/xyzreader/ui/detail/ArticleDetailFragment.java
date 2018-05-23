@@ -1,4 +1,4 @@
-package com.example.xyzreader.ui;
+package com.example.xyzreader.ui.detail;
 
 import android.content.Intent;
 import android.database.Cursor;
@@ -26,6 +26,10 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
+import com.example.xyzreader.ui.list.ArticleListActivity;
+import com.example.xyzreader.util.DrawInsetsFrameLayout;
+import com.example.xyzreader.util.ImageLoaderHelper;
+import com.example.xyzreader.util.ObservableScrollView;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -65,13 +69,6 @@ public class ArticleDetailFragment extends Fragment implements
     private SimpleDateFormat outputFormat = new SimpleDateFormat();
     // Most time functions can only handle 1902 - 2037
     private GregorianCalendar START_OF_EPOCH = new GregorianCalendar(2,1,1);
-
-    /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
-     */
-    public ArticleDetailFragment() {
-    }
 
     public static ArticleDetailFragment newInstance(long itemId) {
         Bundle arguments = new Bundle();
