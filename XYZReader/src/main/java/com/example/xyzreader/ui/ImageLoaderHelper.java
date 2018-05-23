@@ -11,6 +11,9 @@ import com.android.volley.toolbox.Volley;
 public class ImageLoaderHelper {
     private static ImageLoaderHelper sInstance;
 
+    private final LruCache<String, Bitmap> mImageCache = new LruCache<>(20);
+    private ImageLoader mImageLoader;
+
     public static ImageLoaderHelper getInstance(Context context) {
         if (sInstance == null) {
             sInstance = new ImageLoaderHelper(context.getApplicationContext());
@@ -18,9 +21,6 @@ public class ImageLoaderHelper {
 
         return sInstance;
     }
-
-    private final LruCache<String, Bitmap> mImageCache = new LruCache<String, Bitmap>(20);
-    private ImageLoader mImageLoader;
 
     private ImageLoaderHelper(Context applicationContext) {
         RequestQueue queue = Volley.newRequestQueue(applicationContext);
