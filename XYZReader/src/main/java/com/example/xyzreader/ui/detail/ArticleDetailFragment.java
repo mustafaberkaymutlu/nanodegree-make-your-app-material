@@ -207,7 +207,7 @@ public class ArticleDetailFragment extends Fragment implements
             return;
         }
 
-        TextView titleView = rootView.findViewById(R.id.article_title);
+        TextView titleView = rootView.findViewById(R.id.textViewArticleTitle);
         TextView bylineView = rootView.findViewById(R.id.article_byline);
         bylineView.setMovementMethod(new LinkMovementMethod());
         TextView bodyView = rootView.findViewById(R.id.article_body);
