@@ -32,7 +32,8 @@ import dagger.android.support.HasSupportFragmentInjector;
  */
 public class ArticleDetailActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor>,
-        HasSupportFragmentInjector {
+        HasSupportFragmentInjector,
+        ArticleDetailFragment.FragmentListener {
 
     @Inject
     DispatchingAndroidInjector<Fragment> dispatchingAndroidInjector;
@@ -53,11 +54,13 @@ public class ArticleDetailActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         AndroidInjection.inject(this);
         super.onCreate(savedInstanceState);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().getDecorView().setSystemUiVisibility(
                     View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
                             View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         }
+
         setContentView(R.layout.activity_article_detail);
 
         getSupportLoaderManager().initLoader(0, null, this);
@@ -69,7 +72,7 @@ public class ArticleDetailActivity extends AppCompatActivity implements
                 .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()));
         pager.setPageMarginDrawable(new ColorDrawable(0x22000000));
 
-        pager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+        pager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageScrollStateChanged(int state) {
                 super.onPageScrollStateChanged(state);
@@ -144,9 +147,10 @@ public class ArticleDetailActivity extends AppCompatActivity implements
         pagerAdapter.notifyDataSetChanged();
     }
 
-    public void onUpButtonFloorChanged(long itemId, ArticleDetailFragment fragment) {
+    @Override
+    public void onUpButtonFloorChanged(long itemId, int upButtonFloor) {
         if (itemId == selectedItemId) {
-            selectedItemUpButtonFloor = fragment.getUpButtonFloor();
+            selectedItemUpButtonFloor = upButtonFloor;
             updateUpButtonPosition();
         }
     }

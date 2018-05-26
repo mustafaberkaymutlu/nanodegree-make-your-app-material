@@ -13,19 +13,15 @@ import com.example.xyzreader.data.ArticleLoader;
 import com.example.xyzreader.util.DynamicHeightNetworkImageView;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
 import timber.log.Timber;
 
-public class ArticleViewHolder extends RecyclerView.ViewHolder {
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
-    // Use default locale format
-    private static final SimpleDateFormat OUTPUT_FORMAT = new SimpleDateFormat();
-    // Most time functions can only handle 1902 - 2037
-    private static final GregorianCalendar START_OF_EPOCH = new GregorianCalendar(2, 1, 1);
+import static com.example.xyzreader.util.DateUtil.DATE_FORMAT;
+import static com.example.xyzreader.util.DateUtil.OUTPUT_FORMAT;
+import static com.example.xyzreader.util.DateUtil.START_OF_EPOCH;
 
+public class ArticleViewHolder extends RecyclerView.ViewHolder {
     private final ImageLoader imageLoader;
 
     private final DynamicHeightNetworkImageView thumbnailView;

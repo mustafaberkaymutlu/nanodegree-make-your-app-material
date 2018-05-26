@@ -30,16 +30,19 @@ import com.example.xyzreader.data.ArticleLoader;
 import com.example.xyzreader.ui.list.ArticleListActivity;
 import com.example.xyzreader.util.DrawInsetsFrameLayout;
 import com.example.xyzreader.util.ObservableScrollView;
+import com.example.xyzreader.util.Preconditions;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
 import javax.inject.Inject;
 
 import dagger.android.support.AndroidSupportInjection;
 import timber.log.Timber;
+
+import static com.example.xyzreader.util.DateUtil.DATE_FORMAT;
+import static com.example.xyzreader.util.DateUtil.OUTPUT_FORMAT;
+import static com.example.xyzreader.util.DateUtil.START_OF_EPOCH;
 
 /**
  * A fragment representing a single Article detail screen. This fragment is
@@ -70,16 +73,16 @@ public class ArticleDetailFragment extends Fragment implements
     private boolean isCard = false;
     private int statusBarFullOpacityBottom;
 
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
-    // Use default locale format
-    private SimpleDateFormat outputFormat = new SimpleDateFormat();
-    // Most time functions can only handle 1902 - 2037
-    private GregorianCalendar START_OF_EPOCH = new GregorianCalendar(2, 1, 1);
+    private FragmentListener fragmentListener;
+
+    interface FragmentListener {
+        void onUpButtonFloorChanged(long itemId, int upButtonFloor);
+    }
 
     public static ArticleDetailFragment newInstance(long itemId) {
-        Bundle arguments = new Bundle();
+        final ArticleDetailFragment fragment = new ArticleDetailFragment();
+        final Bundle arguments = new Bundle();
         arguments.putLong(ARG_ITEM_ID, itemId);
-        ArticleDetailFragment fragment = new ArticleDetailFragment();
         fragment.setArguments(arguments);
         return fragment;
     }
@@ -88,13 +91,21 @@ public class ArticleDetailFragment extends Fragment implements
     public void onAttach(Context context) {
         AndroidSupportInjection.inject(this);
         super.onAttach(context);
+
+        try {
+            fragmentListener = (FragmentListener) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.getClass().toString() + " must implement FragmentListener. ");
+        }
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (getArguments().containsKey(ARG_ITEM_ID)) {
+        final Bundle args = Preconditions.checkNotNull(getArguments(),
+                "Arguments must not be null. ");
+        if (args.containsKey(ARG_ITEM_ID)) {
             itemId = getArguments().getLong(ARG_ITEM_ID);
         }
 
@@ -102,10 +113,6 @@ public class ArticleDetailFragment extends Fragment implements
         statusBarFullOpacityBottom = getResources().getDimensionPixelSize(
                 R.dimen.detail_card_top_margin);
         setHasOptionsMenu(true);
-    }
-
-    private ArticleDetailActivity getActivityCast() {
-        return (ArticleDetailActivity) getActivity();
     }
 
     @Override
@@ -120,7 +127,8 @@ public class ArticleDetailFragment extends Fragment implements
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             ViewGroup container,
                              Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_article_detail, container, false);
         drawInsetsFrameLayout = rootView.findViewById(R.id.draw_insets_frame_layout);
@@ -129,7 +137,7 @@ public class ArticleDetailFragment extends Fragment implements
         scrollView = rootView.findViewById(R.id.scrollview);
         scrollView.setCallbacks(() -> {
             scrollY = scrollView.getScrollY();
-            getActivityCast().onUpButtonFloorChanged(itemId, ArticleDetailFragment.this);
+            fragmentListener.onUpButtonFloorChanged(itemId, getUpButtonFloor());
             photoContainerView.setTranslationY((int) (scrollY - scrollY / PARALLAX_FACTOR));
             updateStatusBar();
         });
@@ -139,10 +147,11 @@ public class ArticleDetailFragment extends Fragment implements
 
         statusBarColorDrawable = new ColorDrawable(0);
 
-        rootView.findViewById(R.id.share_fab).setOnClickListener(view -> startActivity(Intent.createChooser(ShareCompat.IntentBuilder.from(getActivity())
-                .setType("text/plain")
-                .setText("Some sample text")
-                .getIntent(), getString(R.string.action_share))));
+        rootView.findViewById(R.id.share_fab)
+                .setOnClickListener(view -> startActivity(Intent.createChooser(ShareCompat.IntentBuilder.from(getActivity())
+                        .setType("text/plain")
+                        .setText("Some sample text")
+                        .getIntent(), getString(R.string.action_share))));
 
         bindViews();
         updateStatusBar();
@@ -150,16 +159,20 @@ public class ArticleDetailFragment extends Fragment implements
     }
 
     private void updateStatusBar() {
-        int color = 0;
+        final int color;
+
         if (photoView != null && topInset != 0 && scrollY > 0) {
-            float f = progress(scrollY,
+            final float f = progress(scrollY,
                     statusBarFullOpacityBottom - topInset * 3,
                     statusBarFullOpacityBottom - topInset);
             color = Color.argb((int) (255 * f),
                     (int) (Color.red(mutedColor) * 0.9),
                     (int) (Color.green(mutedColor) * 0.9),
                     (int) (Color.blue(mutedColor) * 0.9));
+        } else {
+            color = 0;
         }
+
         statusBarColorDrawable.setColor(color);
         drawInsetsFrameLayout.setInsetBackground(statusBarColorDrawable);
     }
@@ -181,7 +194,7 @@ public class ArticleDetailFragment extends Fragment implements
     private Date parsePublishedDate() {
         try {
             String date = cursor.getString(ArticleLoader.Query.PUBLISHED_DATE);
-            return dateFormat.parse(date);
+            return DATE_FORMAT.parse(date);
         } catch (ParseException ex) {
             Timber.e(ex);
             Timber.i("passing today's date");
@@ -199,7 +212,6 @@ public class ArticleDetailFragment extends Fragment implements
         bylineView.setMovementMethod(new LinkMovementMethod());
         TextView bodyView = rootView.findViewById(R.id.article_body);
 
-
         bodyView.setTypeface(Typeface.createFromAsset(getResources().getAssets(), "Rosario-Regular.ttf"));
 
         if (cursor != null) {
@@ -207,7 +219,7 @@ public class ArticleDetailFragment extends Fragment implements
             rootView.setVisibility(View.VISIBLE);
             rootView.animate().alpha(1);
             titleView.setText(cursor.getString(ArticleLoader.Query.TITLE));
-            Date publishedDate = parsePublishedDate();
+            final Date publishedDate = parsePublishedDate();
             if (!publishedDate.before(START_OF_EPOCH.getTime())) {
                 bylineView.setText(Html.fromHtml(
                         DateUtils.getRelativeTimeSpanString(
@@ -217,34 +229,39 @@ public class ArticleDetailFragment extends Fragment implements
                                 + " by <font color='#ffffff'>"
                                 + cursor.getString(ArticleLoader.Query.AUTHOR)
                                 + "</font>"));
-
             } else {
                 // If date is before 1902, just show the string
                 bylineView.setText(Html.fromHtml(
-                        outputFormat.format(publishedDate) + " by <font color='#ffffff'>"
+                        OUTPUT_FORMAT.format(publishedDate) + " by <font color='#ffffff'>"
                                 + cursor.getString(ArticleLoader.Query.AUTHOR)
                                 + "</font>"));
-
             }
-            bodyView.setText(Html.fromHtml(cursor.getString(ArticleLoader.Query.BODY).replaceAll("(\r\n|\n)", "<br />")));
-            imageLoader
-                    .get(cursor.getString(ArticleLoader.Query.PHOTO_URL), new ImageLoader.ImageListener() {
+
+            final String body = cursor.getString(ArticleLoader.Query.BODY);
+            bodyView.setText(Html.fromHtml(body.replaceAll("(\r\n|\n)", "<br />")));
+
+            imageLoader.get(cursor.getString(ArticleLoader.Query.PHOTO_URL),
+                    new ImageLoader.ImageListener() {
                         @Override
                         public void onResponse(ImageLoader.ImageContainer imageContainer, boolean b) {
-                            Bitmap bitmap = imageContainer.getBitmap();
-                            if (bitmap != null) {
-                                Palette p = Palette.generate(bitmap, 12);
-                                mutedColor = p.getDarkMutedColor(0xFF333333);
+                            final Bitmap bitmap = imageContainer.getBitmap();
+
+                            if (bitmap == null) {
+                                return;
+                            }
+
+                            new Palette.Builder(bitmap).generate(palette -> {
+                                mutedColor = palette.getDarkMutedColor(0xFF333333);
                                 photoView.setImageBitmap(imageContainer.getBitmap());
                                 rootView.findViewById(R.id.meta_bar)
                                         .setBackgroundColor(mutedColor);
                                 updateStatusBar();
-                            }
+                            });
                         }
 
                         @Override
                         public void onErrorResponse(VolleyError volleyError) {
-
+                            // no-op
                         }
                     });
         } else {
