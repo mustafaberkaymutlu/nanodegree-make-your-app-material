@@ -55,11 +55,9 @@ public class ArticleDetailActivity extends AppCompatActivity implements
         AndroidInjection.inject(this);
         super.onCreate(savedInstanceState);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
-                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-        }
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
 
         setContentView(R.layout.activity_article_detail);
 
@@ -96,15 +94,13 @@ public class ArticleDetailActivity extends AppCompatActivity implements
         upButton = findViewById(R.id.action_up);
         upButton.setOnClickListener(view -> onSupportNavigateUp());
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            upButtonContainer.setOnApplyWindowInsetsListener((view, windowInsets) -> {
-                view.onApplyWindowInsets(windowInsets);
-                topInset = windowInsets.getSystemWindowInsetTop();
-                upButtonContainer.setTranslationY(topInset);
-                updateUpButtonPosition();
-                return windowInsets;
-            });
-        }
+        upButtonContainer.setOnApplyWindowInsetsListener((view, windowInsets) -> {
+            view.onApplyWindowInsets(windowInsets);
+            topInset = windowInsets.getSystemWindowInsetTop();
+            upButtonContainer.setTranslationY(topInset);
+            updateUpButtonPosition();
+            return windowInsets;
+        });
 
         if (savedInstanceState == null) {
             if (getIntent() != null && getIntent().getData() != null) {

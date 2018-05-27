@@ -80,9 +80,9 @@ public class DrawInsetsFrameLayout extends FrameLayout {
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            requestApplyInsets();
-        }
+
+        requestApplyInsets();
+
         if (mInsetBackground != null) {
             mInsetBackground.setCallback(this);
         }
