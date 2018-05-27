@@ -28,21 +28,17 @@ import com.android.volley.toolbox.ImageLoader;
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
 import com.example.xyzreader.ui.list.ArticleListActivity;
+import com.example.xyzreader.util.DateUtil;
 import com.example.xyzreader.util.DrawInsetsFrameLayout;
 import com.example.xyzreader.util.ObservableScrollView;
 import com.example.xyzreader.util.Preconditions;
 
-import java.text.ParseException;
 import java.util.Date;
 
 import javax.inject.Inject;
 
 import dagger.android.support.AndroidSupportInjection;
 import timber.log.Timber;
-
-import static com.example.xyzreader.util.DateUtil.DATE_FORMAT;
-import static com.example.xyzreader.util.DateUtil.OUTPUT_FORMAT;
-import static com.example.xyzreader.util.DateUtil.START_OF_EPOCH;
 
 /**
  * A fragment representing a single Article detail screen. This fragment is
@@ -191,17 +187,6 @@ public class ArticleDetailFragment extends Fragment implements
         }
     }
 
-    private Date parsePublishedDate() {
-        try {
-            String date = cursor.getString(ArticleLoader.Query.PUBLISHED_DATE);
-            return DATE_FORMAT.parse(date);
-        } catch (ParseException ex) {
-            Timber.e(ex);
-            Timber.i("passing today's date");
-            return new Date();
-        }
-    }
-
     private void bindViews() {
         if (rootView == null) {
             return;
@@ -219,20 +204,20 @@ public class ArticleDetailFragment extends Fragment implements
             rootView.setVisibility(View.VISIBLE);
             rootView.animate().alpha(1);
             titleView.setText(cursor.getString(ArticleLoader.Query.TITLE));
-            final Date publishedDate = parsePublishedDate();
-            if (!publishedDate.before(START_OF_EPOCH.getTime())) {
+            final Date publishedDate = DateUtil.parsePublishedDate(cursor.getString(ArticleLoader.Query.PUBLISHED_DATE));
+            if (DateUtil.isBefore1902(publishedDate)) {
+                // If date is before 1902, just show the string
+                bylineView.setText(Html.fromHtml(
+                        DateUtil.formatOutput(publishedDate) + " by <font color='#ffffff'>"
+                                + cursor.getString(ArticleLoader.Query.AUTHOR)
+                                + "</font>"));
+            } else {
                 bylineView.setText(Html.fromHtml(
                         DateUtils.getRelativeTimeSpanString(
                                 publishedDate.getTime(),
                                 System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
                                 DateUtils.FORMAT_ABBREV_ALL).toString()
                                 + " by <font color='#ffffff'>"
-                                + cursor.getString(ArticleLoader.Query.AUTHOR)
-                                + "</font>"));
-            } else {
-                // If date is before 1902, just show the string
-                bylineView.setText(Html.fromHtml(
-                        OUTPUT_FORMAT.format(publishedDate) + " by <font color='#ffffff'>"
                                 + cursor.getString(ArticleLoader.Query.AUTHOR)
                                 + "</font>"));
             }

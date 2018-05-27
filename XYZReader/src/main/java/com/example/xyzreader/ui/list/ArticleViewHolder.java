@@ -13,15 +13,9 @@ import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
+import com.example.xyzreader.util.DateUtil;
 
-import java.text.ParseException;
 import java.util.Date;
-
-import timber.log.Timber;
-
-import static com.example.xyzreader.util.DateUtil.DATE_FORMAT;
-import static com.example.xyzreader.util.DateUtil.OUTPUT_FORMAT;
-import static com.example.xyzreader.util.DateUtil.START_OF_EPOCH;
 
 public class ArticleViewHolder extends RecyclerView.ViewHolder {
     private final ImageLoader imageLoader;
@@ -47,19 +41,19 @@ public class ArticleViewHolder extends RecyclerView.ViewHolder {
     public void bind(Cursor cursor) {
         textViewTitle.setText(cursor.getString(ArticleLoader.Query.TITLE));
 
-        final Date publishedDate = parsePublishedDate(cursor.getString(ArticleLoader.Query.PUBLISHED_DATE));
+        final Date publishedDate = DateUtil.parsePublishedDate(cursor.getString(ArticleLoader.Query.PUBLISHED_DATE));
 
-        if (!publishedDate.before(START_OF_EPOCH.getTime())) {
+        if (DateUtil.isBefore1902(publishedDate)) {
+            textViewSubtitle.setText(Html.fromHtml(
+                    DateUtil.formatOutput(publishedDate)
+                            + "<br/>" + " by "
+                            + cursor.getString(ArticleLoader.Query.AUTHOR)));
+        } else {
             textViewSubtitle.setText(Html.fromHtml(
                     DateUtils.getRelativeTimeSpanString(
                             publishedDate.getTime(),
                             System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
                             DateUtils.FORMAT_ABBREV_ALL).toString()
-                            + "<br/>" + " by "
-                            + cursor.getString(ArticleLoader.Query.AUTHOR)));
-        } else {
-            textViewSubtitle.setText(Html.fromHtml(
-                    OUTPUT_FORMAT.format(publishedDate)
                             + "<br/>" + " by "
                             + cursor.getString(ArticleLoader.Query.AUTHOR)));
         }
@@ -76,15 +70,5 @@ public class ArticleViewHolder extends RecyclerView.ViewHolder {
         set.clone(constraintLayoutContainer);
         set.setDimensionRatio(imageViewThumbnail.getId(), "1:" + aspectRatio);
         set.applyTo(constraintLayoutContainer);
-    }
-
-    private Date parsePublishedDate(String date) {
-        try {
-            return DATE_FORMAT.parse(date);
-        } catch (ParseException ex) {
-            Timber.e(ex);
-            Timber.i("passing today's date");
-            return new Date();
-        }
     }
 }
