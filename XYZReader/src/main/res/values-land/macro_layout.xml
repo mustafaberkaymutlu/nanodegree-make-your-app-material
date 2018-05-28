@@ -1,5 +1,5 @@
 <resources>
     <!-- detail -->
     <dimen name="detail_photo_height">224dp</dimen>
-    <dimen name="detail_inner_horiz_margin">112dp</dimen>
+    <dimen name="detail_photo_height_overlap">80dp</dimen>
 </resources>

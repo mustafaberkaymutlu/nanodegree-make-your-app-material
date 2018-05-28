@@ -10,10 +10,13 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import com.android.volley.toolbox.ImageLoader;
 import com.example.xyzreader.R;
@@ -21,6 +24,7 @@ import com.example.xyzreader.data.ArticleLoader;
 import com.example.xyzreader.data.ItemsContract;
 import com.example.xyzreader.data.UpdaterService;
 import com.example.xyzreader.ui.detail.ArticleDetailActivity;
+import com.example.xyzreader.util.Preconditions;
 
 import javax.inject.Inject;
 
@@ -62,6 +66,12 @@ public class ArticleListActivity extends AppCompatActivity implements
         swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
         recyclerView = findViewById(R.id.recycler_view);
 
+        final Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        final ActionBar actionBar = Preconditions.checkNotNull(getSupportActionBar(),
+                "This won't evet be null because we are setting it just above line... ");
+        actionBar.setDisplayShowTitleEnabled(false);
+
         swipeRefreshLayout.setOnRefreshListener(this::refresh);
 
         getSupportLoaderManager().initLoader(0, null, this);
@@ -88,6 +98,24 @@ public class ArticleListActivity extends AppCompatActivity implements
         super.onStop();
 
         unregisterReceiver(refreshingReceiver);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_refresh:
+                swipeRefreshLayout.setRefreshing(true);
+                refresh();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     private void updateRefreshingUI() {

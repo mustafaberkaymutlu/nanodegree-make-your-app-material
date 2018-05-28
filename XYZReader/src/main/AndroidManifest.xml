@@ -26,7 +26,8 @@
 
         <activity
             android:name=".ui.detail.ArticleDetailActivity"
-            android:parentActivityName=".ui.list.ArticleListActivity">
+            android:parentActivityName=".ui.list.ArticleListActivity"
+            android:theme="@style/AppTheme.Detail">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -37,10 +38,12 @@
                 android:value=".ui.list.ArticleListActivity" />
         </activity>
 
-        <service android:name=".data.UpdaterService"
+        <service
+            android:name=".data.UpdaterService"
             android:exported="false" />
 
-        <provider android:name=".data.ItemsProvider"
+        <provider
+            android:name=".data.ItemsProvider"
             android:authorities="com.example.xyzreader"
             android:exported="false" />
 

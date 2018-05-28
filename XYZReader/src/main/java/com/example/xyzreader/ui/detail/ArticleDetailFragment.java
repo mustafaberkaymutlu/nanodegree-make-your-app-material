@@ -4,16 +4,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.content.Loader;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
+import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.format.DateUtils;
 import android.text.method.LinkMovementMethod;
@@ -29,8 +31,6 @@ import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
 import com.example.xyzreader.ui.list.ArticleListActivity;
 import com.example.xyzreader.util.DateUtil;
-import com.example.xyzreader.util.DrawInsetsFrameLayout;
-import com.example.xyzreader.util.ObservableScrollView;
 import com.example.xyzreader.util.Preconditions;
 
 import java.util.Date;
@@ -49,7 +49,6 @@ public class ArticleDetailFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String ARG_ITEM_ID = "item_id";
-    private static final float PARALLAX_FACTOR = 1.25f;
 
     @Inject
     ImageLoader imageLoader;
@@ -58,21 +57,13 @@ public class ArticleDetailFragment extends Fragment implements
     private long itemId;
     private View rootView;
     private int mutedColor = 0xFF333333;
-    private ObservableScrollView scrollView;
-    private DrawInsetsFrameLayout drawInsetsFrameLayout;
-    private ColorDrawable statusBarColorDrawable;
 
-    private int topInset;
-    private View photoContainerView;
     private ImageView photoView;
-    private int scrollY;
-    private boolean isCard = false;
-    private int statusBarFullOpacityBottom;
 
     private FragmentListener fragmentListener;
 
     interface FragmentListener {
-        void onUpButtonFloorChanged(long itemId, int upButtonFloor);
+
     }
 
     public static ArticleDetailFragment newInstance(long itemId) {
@@ -102,12 +93,9 @@ public class ArticleDetailFragment extends Fragment implements
         final Bundle args = Preconditions.checkNotNull(getArguments(),
                 "Arguments must not be null. ");
         if (args.containsKey(ARG_ITEM_ID)) {
-            itemId = getArguments().getLong(ARG_ITEM_ID);
+            itemId = args.getLong(ARG_ITEM_ID);
         }
 
-        isCard = getResources().getBoolean(R.bool.detail_is_card);
-        statusBarFullOpacityBottom = getResources().getDimensionPixelSize(
-                R.dimen.detail_card_top_margin);
         setHasOptionsMenu(true);
     }
 
@@ -127,64 +115,33 @@ public class ArticleDetailFragment extends Fragment implements
                              ViewGroup container,
                              Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_article_detail, container, false);
-        drawInsetsFrameLayout = rootView.findViewById(R.id.draw_insets_frame_layout);
-        drawInsetsFrameLayout.setOnInsetsCallback(insets -> topInset = insets.top);
 
-        scrollView = rootView.findViewById(R.id.scrollview);
-        scrollView.setCallbacks(() -> {
-            scrollY = scrollView.getScrollY();
-            fragmentListener.onUpButtonFloorChanged(itemId, getUpButtonFloor());
-            photoContainerView.setTranslationY((int) (scrollY - scrollY / PARALLAX_FACTOR));
-            updateStatusBar();
-        });
+        photoView = rootView.findViewById(R.id.imageViewPhoto);
 
-        photoView = rootView.findViewById(R.id.photo);
-        photoContainerView = rootView.findViewById(R.id.photo_container);
-
-        statusBarColorDrawable = new ColorDrawable(0);
-
-        rootView.findViewById(R.id.share_fab)
-                .setOnClickListener(view -> startActivity(Intent.createChooser(ShareCompat.IntentBuilder.from(getActivity())
-                        .setType("text/plain")
-                        .setText("Some sample text")
-                        .getIntent(), getString(R.string.action_share))));
+        rootView.findViewById(R.id.fabShare).setOnClickListener(view -> share());
 
         bindViews();
-        updateStatusBar();
         return rootView;
     }
 
-    private void updateStatusBar() {
-        final int color;
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-        if (photoView != null && topInset != 0 && scrollY > 0) {
-            final float f = progress(scrollY,
-                    statusBarFullOpacityBottom - topInset * 3,
-                    statusBarFullOpacityBottom - topInset);
-            color = Color.argb((int) (255 * f),
-                    (int) (Color.red(mutedColor) * 0.9),
-                    (int) (Color.green(mutedColor) * 0.9),
-                    (int) (Color.blue(mutedColor) * 0.9));
-        } else {
-            color = 0;
-        }
-
-        statusBarColorDrawable.setColor(color);
-        drawInsetsFrameLayout.setInsetBackground(statusBarColorDrawable);
+        final AppCompatActivity appCompatActivity = (AppCompatActivity) getActivity();
+        final Toolbar toolbar = view.findViewById(R.id.toolbar);
+        appCompatActivity.setSupportActionBar(toolbar);
+        final ActionBar ab = appCompatActivity.getSupportActionBar();
+        ab.setDisplayHomeAsUpEnabled(true);
     }
 
-    private static float progress(float v, float min, float max) {
-        return constrain((v - min) / (max - min), 0, 1);
-    }
-
-    private static float constrain(float val, float min, float max) {
-        if (val < min) {
-            return min;
-        } else if (val > max) {
-            return max;
-        } else {
-            return val;
-        }
+    private void share() {
+        final Intent shareIntent = ShareCompat.IntentBuilder.from(getActivity())
+                .setType("text/plain")
+                .setText("Some sample text")
+                .getIntent();
+        final Intent chooserIntent = Intent.createChooser(shareIntent, getString(R.string.action_share));
+        startActivity(chooserIntent);
     }
 
     private void bindViews() {
@@ -200,9 +157,8 @@ public class ArticleDetailFragment extends Fragment implements
         bodyView.setTypeface(Typeface.createFromAsset(getResources().getAssets(), "Rosario-Regular.ttf"));
 
         if (cursor != null) {
-            rootView.setAlpha(0);
             rootView.setVisibility(View.VISIBLE);
-            rootView.animate().alpha(1);
+
             titleView.setText(cursor.getString(ArticleLoader.Query.TITLE));
             final Date publishedDate = DateUtil.parsePublishedDate(cursor.getString(ArticleLoader.Query.PUBLISHED_DATE));
             if (DateUtil.isBefore1902(publishedDate)) {
@@ -240,7 +196,6 @@ public class ArticleDetailFragment extends Fragment implements
                                 photoView.setImageBitmap(imageContainer.getBitmap());
                                 rootView.findViewById(R.id.meta_bar)
                                         .setBackgroundColor(mutedColor);
-                                updateStatusBar();
                             });
                         }
 
@@ -286,16 +241,5 @@ public class ArticleDetailFragment extends Fragment implements
     public void onLoaderReset(@NonNull Loader<Cursor> cursorLoader) {
         cursor = null;
         bindViews();
-    }
-
-    public int getUpButtonFloor() {
-        if (photoContainerView == null || photoView.getHeight() == 0) {
-            return Integer.MAX_VALUE;
-        }
-
-        // account for parallax
-        return isCard
-                ? (int) photoContainerView.getTranslationY() + photoView.getHeight() - scrollY
-                : photoView.getHeight() - scrollY;
     }
 }

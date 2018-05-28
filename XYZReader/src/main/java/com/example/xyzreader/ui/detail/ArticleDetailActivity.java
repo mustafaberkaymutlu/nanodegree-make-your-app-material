@@ -2,7 +2,6 @@ package com.example.xyzreader.ui.detail;
 
 import android.database.Cursor;
 import android.graphics.drawable.ColorDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -14,7 +13,6 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
 import android.view.View;
-import android.view.ViewGroup;
 
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
@@ -42,13 +40,9 @@ public class ArticleDetailActivity extends AppCompatActivity implements
     private long startId;
 
     private long selectedItemId;
-    private int selectedItemUpButtonFloor = Integer.MAX_VALUE;
-    private int topInset;
 
     private ViewPager pager;
     private MyPagerAdapter pagerAdapter;
-    private View upButtonContainer;
-    private View upButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,34 +66,13 @@ public class ArticleDetailActivity extends AppCompatActivity implements
 
         pager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
-            public void onPageScrollStateChanged(int state) {
-                super.onPageScrollStateChanged(state);
-                upButton.animate()
-                        .alpha((state == ViewPager.SCROLL_STATE_IDLE) ? 1f : 0f)
-                        .setDuration(300);
-            }
-
-            @Override
             public void onPageSelected(int position) {
                 if (cursor != null) {
                     cursor.moveToPosition(position);
                 }
+
                 selectedItemId = cursor.getLong(ArticleLoader.Query._ID);
-                updateUpButtonPosition();
             }
-        });
-
-        upButtonContainer = findViewById(R.id.up_container);
-
-        upButton = findViewById(R.id.action_up);
-        upButton.setOnClickListener(view -> onSupportNavigateUp());
-
-        upButtonContainer.setOnApplyWindowInsetsListener((view, windowInsets) -> {
-            view.onApplyWindowInsets(windowInsets);
-            topInset = windowInsets.getSystemWindowInsetTop();
-            upButtonContainer.setTranslationY(topInset);
-            updateUpButtonPosition();
-            return windowInsets;
         });
 
         if (savedInstanceState == null) {
@@ -123,16 +96,19 @@ public class ArticleDetailActivity extends AppCompatActivity implements
 
         // Select the start ID
         if (startId > 0) {
-            this.cursor.moveToFirst();
+            cursor.moveToFirst();
+
             // TODO: optimize
-            while (!this.cursor.isAfterLast()) {
-                if (this.cursor.getLong(ArticleLoader.Query._ID) == startId) {
-                    final int position = this.cursor.getPosition();
+            while (!cursor.isAfterLast()) {
+                if (cursor.getLong(ArticleLoader.Query._ID) == startId) {
+                    final int position = cursor.getPosition();
                     pager.setCurrentItem(position, false);
                     break;
                 }
-                this.cursor.moveToNext();
+
+                cursor.moveToNext();
             }
+
             startId = 0;
         }
     }
@@ -144,19 +120,6 @@ public class ArticleDetailActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onUpButtonFloorChanged(long itemId, int upButtonFloor) {
-        if (itemId == selectedItemId) {
-            selectedItemUpButtonFloor = upButtonFloor;
-            updateUpButtonPosition();
-        }
-    }
-
-    private void updateUpButtonPosition() {
-        int upButtonNormalBottom = topInset + upButton.getHeight();
-        upButton.setTranslationY(Math.min(selectedItemUpButtonFloor - upButtonNormalBottom, 0));
-    }
-
-    @Override
     public AndroidInjector<Fragment> supportFragmentInjector() {
         return dispatchingAndroidInjector;
     }
@@ -164,16 +127,6 @@ public class ArticleDetailActivity extends AppCompatActivity implements
     private class MyPagerAdapter extends FragmentStatePagerAdapter {
         MyPagerAdapter(FragmentManager fm) {
             super(fm);
-        }
-
-        @Override
-        public void setPrimaryItem(ViewGroup container, int position, Object object) {
-            super.setPrimaryItem(container, position, object);
-            ArticleDetailFragment fragment = (ArticleDetailFragment) object;
-            if (fragment != null) {
-                selectedItemUpButtonFloor = fragment.getUpButtonFloor();
-                updateUpButtonPosition();
-            }
         }
 
         @Override

@@ -1,0 +1,5 @@
+<resources>
+    <!-- detail -->
+    <dimen name="detail_inner_horizontal_margin">48dp</dimen>
+    <dimen name="detail_card_width">600dp</dimen>
+</resources>
