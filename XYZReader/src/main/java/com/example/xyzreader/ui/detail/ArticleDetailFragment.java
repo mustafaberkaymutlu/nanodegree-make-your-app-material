@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -61,6 +60,7 @@ public class ArticleDetailFragment extends Fragment implements
     private ImageView photoView;
 
     private FragmentListener fragmentListener;
+    private Toolbar toolbar;
 
     interface FragmentListener {
 
@@ -129,7 +129,7 @@ public class ArticleDetailFragment extends Fragment implements
         super.onViewCreated(view, savedInstanceState);
 
         final AppCompatActivity appCompatActivity = (AppCompatActivity) getActivity();
-        final Toolbar toolbar = view.findViewById(R.id.toolbar);
+        toolbar = view.findViewById(R.id.toolbar);
         appCompatActivity.setSupportActionBar(toolbar);
         final ActionBar ab = appCompatActivity.getSupportActionBar();
         ab.setDisplayHomeAsUpEnabled(true);
@@ -157,7 +157,10 @@ public class ArticleDetailFragment extends Fragment implements
         if (cursor != null) {
             rootView.setVisibility(View.VISIBLE);
 
-            titleView.setText(cursor.getString(ArticleLoader.Query.TITLE));
+            final String title = cursor.getString(ArticleLoader.Query.TITLE);
+            titleView.setText(title);
+            toolbar.setTitle(title);
+
             final Date publishedDate = DateUtil.parsePublishedDate(cursor.getString(ArticleLoader.Query.PUBLISHED_DATE));
             if (DateUtil.isBefore1902(publishedDate)) {
                 // If date is before 1902, just show the string

@@ -9,14 +9,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/colorPrimary"
+        android:elevation="@dimen/elevation_appbar"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
         <android.support.design.widget.CollapsingToolbarLayout
             android:layout_width="match_parent"
             android:layout_height="@dimen/detail_photo_height"
             app:contentScrim="?attr/colorPrimary"
+            app:expandedTitleTextAppearance="@android:color/transparent"
             app:layout_scrollFlags="scroll|exitUntilCollapsed"
-            app:titleEnabled="false">
+            app:titleEnabled="true">
 
             <ImageView
                 android:id="@+id/imageViewPhoto"
@@ -73,24 +75,20 @@
 
                     <TextView
                         android:id="@+id/textViewArticleTitle"
-                        style="?android:attr/textAppearanceLarge"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:fontFamily="sans-serif-condensed"
-                        android:lineSpacingMultiplier="0.9"
                         android:paddingBottom="@dimen/detail_meta_bar_title_bottom_padding"
-                        android:textColor="#fff"
-                        android:textSize="@dimen/detail_title_text_size"
-                        android:textStyle="bold"
-                        tools:text="Make it so, energy!" />
+                        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+                        android:textColor="@color/white"
+                        tools:text="Space suits tremble from disconnections like ship-wide processors." />
 
                     <TextView
                         android:id="@+id/article_byline"
-                        style="?android:attr/textAppearanceSmall"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="#8fff"
-                        tools:text="The space wobbles stigma like a sub-light processor." />
+                        android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                        android:textColor="@color/secondaryText"
+                        tools:text="Astronauts warp on love at nowhere!" />
                 </LinearLayout>
 
                 <TextView
@@ -98,15 +96,14 @@
                     style="?android:attr/textAppearanceMedium"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
                     android:layout_marginLeft="@dimen/detail_inner_horizontal_margin"
                     android:layout_marginRight="@dimen/detail_inner_horizontal_margin"
                     android:lineSpacingMultiplier="@fraction/detail_body_line_spacing_multiplier"
                     android:paddingBottom="@dimen/detail_body_bottom_margin"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                     android:textColor="@color/primaryText"
                     android:textColorLink="@color/accent"
-                    android:textSize="@dimen/detail_body_text_size"
-                    tools:text="Collectives reproduce on powerdrain at earth! The nanomachine trembles adventure like a conscious moon.Pattern at the universe was the metamorphosis of sonic shower, discovered to an evasive dosi.Where is the harmless transporter?Harmless ellipses lead to the mineral.When boiling large popcorns, be sure they are room temperature.For a fresh crusted pilaf, add some melon sauce and basil leafs.Fresh celery can be made sour by whisking with white wine.What’s the secret to hardened and mild chocolate? Always use raw mustard." />
+                    tools:text="Dozens of crewmates open collective, boldly astronauts. Fly wihtout devastation, and we won’t raise a kahless.Engage.Proton of an extraterrestrial nuclear flux, feed the mystery! All hands view." />
 
             </LinearLayout>
 
@@ -122,7 +119,7 @@
         android:layout_margin="@dimen/fab_margin"
         android:background="@drawable/fab_share_background"
         android:contentDescription="@string/action_share"
-        android:elevation="@dimen/fab_elevation"
+        android:elevation="@dimen/elevation_fab"
         android:src="@drawable/ic_share"
         android:stateListAnimator="@anim/fab_state_list_anim"
         app:fabSize="normal" />
