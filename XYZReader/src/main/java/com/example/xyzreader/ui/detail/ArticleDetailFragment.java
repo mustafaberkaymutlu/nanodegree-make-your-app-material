@@ -54,17 +54,15 @@ public class ArticleDetailFragment extends Fragment implements
 
     private Cursor cursor;
     private long itemId;
-    private View rootView;
     private int mutedColor = 0xFF333333;
 
+    private View viewMetaBar;
     private ImageView photoView;
+    private TextView textViewTitle;
+    private TextView textViewByLine;
+    private TextView textViewBody;
 
-    private FragmentListener fragmentListener;
     private Toolbar toolbar;
-
-    interface FragmentListener {
-
-    }
 
     public static ArticleDetailFragment newInstance(long itemId) {
         final ArticleDetailFragment fragment = new ArticleDetailFragment();
@@ -78,12 +76,6 @@ public class ArticleDetailFragment extends Fragment implements
     public void onAttach(Context context) {
         AndroidSupportInjection.inject(this);
         super.onAttach(context);
-
-        try {
-            fragmentListener = (FragmentListener) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.getClass().toString() + " must implement FragmentListener. ");
-        }
     }
 
     @Override
@@ -114,14 +106,7 @@ public class ArticleDetailFragment extends Fragment implements
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
-        rootView = inflater.inflate(R.layout.fragment_article_detail, container, false);
-
-        photoView = rootView.findViewById(R.id.imageViewPhoto);
-
-        rootView.findViewById(R.id.fabShare).setOnClickListener(view -> share());
-
-        bindViews();
-        return rootView;
+        return inflater.inflate(R.layout.fragment_article_detail, container, false);
     }
 
     @Override
@@ -133,43 +118,32 @@ public class ArticleDetailFragment extends Fragment implements
         appCompatActivity.setSupportActionBar(toolbar);
         final ActionBar ab = appCompatActivity.getSupportActionBar();
         ab.setDisplayHomeAsUpEnabled(true);
-    }
 
-    private void share() {
-        final Intent shareIntent = ShareCompat.IntentBuilder.from(getActivity())
-                .setType("text/plain")
-                .setText("Some sample text")
-                .getIntent();
-        final Intent chooserIntent = Intent.createChooser(shareIntent, getString(R.string.action_share));
-        startActivity(chooserIntent);
+        photoView = view.findViewById(R.id.imageViewPhoto);
+        textViewTitle = view.findViewById(R.id.textViewArticleTitle);
+        textViewByLine = view.findViewById(R.id.article_byline);
+        textViewByLine.setMovementMethod(new LinkMovementMethod());
+        textViewBody = view.findViewById(R.id.article_body);
+        viewMetaBar = view.findViewById(R.id.meta_bar);
+
+        view.findViewById(R.id.fabShare).setOnClickListener(view2 -> share());
     }
 
     private void bindViews() {
-        if (rootView == null) {
-            return;
-        }
-
-        TextView titleView = rootView.findViewById(R.id.textViewArticleTitle);
-        TextView bylineView = rootView.findViewById(R.id.article_byline);
-        bylineView.setMovementMethod(new LinkMovementMethod());
-        TextView bodyView = rootView.findViewById(R.id.article_body);
-
         if (cursor != null) {
-            rootView.setVisibility(View.VISIBLE);
-
             final String title = cursor.getString(ArticleLoader.Query.TITLE);
-            titleView.setText(title);
+            textViewTitle.setText(title);
             toolbar.setTitle(title);
 
             final Date publishedDate = DateUtil.parsePublishedDate(cursor.getString(ArticleLoader.Query.PUBLISHED_DATE));
             if (DateUtil.isBefore1902(publishedDate)) {
                 // If date is before 1902, just show the string
-                bylineView.setText(Html.fromHtml(
+                textViewByLine.setText(Html.fromHtml(
                         DateUtil.formatOutput(publishedDate) + " by <font color='#ffffff'>"
                                 + cursor.getString(ArticleLoader.Query.AUTHOR)
                                 + "</font>"));
             } else {
-                bylineView.setText(Html.fromHtml(
+                textViewByLine.setText(Html.fromHtml(
                         DateUtils.getRelativeTimeSpanString(
                                 publishedDate.getTime(),
                                 System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
@@ -180,7 +154,7 @@ public class ArticleDetailFragment extends Fragment implements
             }
 
             final String body = cursor.getString(ArticleLoader.Query.BODY);
-            bodyView.setText(Html.fromHtml(body.replaceAll("(\r\n|\n)", "<br />")));
+            textViewBody.setText(Html.fromHtml(body.replaceAll("(\r\n|\n)", "<br />")));
 
             imageLoader.get(cursor.getString(ArticleLoader.Query.PHOTO_URL),
                     new ImageLoader.ImageListener() {
@@ -195,8 +169,7 @@ public class ArticleDetailFragment extends Fragment implements
                             new Palette.Builder(bitmap).generate(palette -> {
                                 mutedColor = palette.getDarkMutedColor(0xFF333333);
                                 photoView.setImageBitmap(imageContainer.getBitmap());
-                                rootView.findViewById(R.id.meta_bar)
-                                        .setBackgroundColor(mutedColor);
+                                viewMetaBar.setBackgroundColor(mutedColor);
                             });
                         }
 
@@ -206,11 +179,14 @@ public class ArticleDetailFragment extends Fragment implements
                         }
                     });
         } else {
-            rootView.setVisibility(View.GONE);
-            titleView.setText("N/A");
-            bylineView.setText("N/A");
-            bodyView.setText("N/A");
+            clearViews();
         }
+    }
+
+    private void clearViews() {
+        textViewTitle.setText("N/A");
+        textViewByLine.setText("N/A");
+        textViewBody.setText("N/A");
     }
 
     @NonNull
@@ -220,19 +196,20 @@ public class ArticleDetailFragment extends Fragment implements
     }
 
     @Override
-    public void onLoadFinished(@NonNull Loader<Cursor> cursorLoader, Cursor cursor) {
+    public void onLoadFinished(@NonNull Loader<Cursor> cursorLoader, Cursor receivedDataCursor) {
         if (!isAdded()) {
-            if (cursor != null) {
-                cursor.close();
-            }
+            receivedDataCursor.close();
             return;
         }
 
-        this.cursor = cursor;
-        if (this.cursor != null && !this.cursor.moveToFirst()) {
+        cursor = receivedDataCursor;
+
+        if (!cursor.moveToFirst()) {
             Timber.e("Error reading item detail cursor");
-            this.cursor.close();
-            this.cursor = null;
+            cursor.close();
+            cursor = null;
+            clearViews();
+            return;
         }
 
         bindViews();
@@ -241,6 +218,21 @@ public class ArticleDetailFragment extends Fragment implements
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> cursorLoader) {
         cursor = null;
-        bindViews();
+        clearViews();
+    }
+
+    private void share() {
+        if (cursor == null || !cursor.moveToFirst()) {
+            Timber.e("Cannot share, data is not available. ");
+            return;
+        }
+
+        final String title = cursor.getString(ArticleLoader.Query.TITLE);
+        final Intent shareIntent = ShareCompat.IntentBuilder.from(getActivity())
+                .setType("text/plain")
+                .setText(getString(R.string.share_text, title))
+                .getIntent();
+        final Intent chooserIntent = Intent.createChooser(shareIntent, getString(R.string.action_share));
+        startActivity(chooserIntent);
     }
 }

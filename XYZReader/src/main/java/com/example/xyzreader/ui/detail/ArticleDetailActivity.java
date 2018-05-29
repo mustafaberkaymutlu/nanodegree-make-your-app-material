@@ -30,8 +30,7 @@ import dagger.android.support.HasSupportFragmentInjector;
  */
 public class ArticleDetailActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor>,
-        HasSupportFragmentInjector,
-        ArticleDetailFragment.FragmentListener {
+        HasSupportFragmentInjector {
 
     @Inject
     DispatchingAndroidInjector<Fragment> dispatchingAndroidInjector;
